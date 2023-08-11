@@ -6,14 +6,17 @@ import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/IERC721Enumerable.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-contract ArbNFTMarketplace is IERC721Receiver, Ownable {
+contract ArbNFTMarketplace is IERC721Receiver, Ownable, ReentrancyGuard {
     using SafeMath for uint256;
     IERC721Enumerable private nft;
 
     constructor(IERC721Enumerable _nft) {
         nft = _nft;
     }
+
+    bool private paused;
 
     struct ListDetail {
         address payable seller;
@@ -71,7 +74,11 @@ contract ArbNFTMarketplace is IERC721Receiver, Ownable {
         ownerARBNFT = _add;
     }
 
+    // pause lai
+    // chuyen nft lai cho chu so huu khi khong dung contract nay nua
+
     function listNft(uint256 _tokenId, uint256 _price, uint256 _time) external {
+        require(paused == false, "Contract is paused");
         require(
             nft.ownerOf(_tokenId) == msg.sender,
             "You are not the owner of this NFT"
@@ -117,7 +124,7 @@ contract ArbNFTMarketplace is IERC721Receiver, Ownable {
             "This NFT doesn't exist on marketplace"
         );
         require(
-            listDetail[_tokenId].seller == msg.sender,
+            listDetail[_tokenId].seller == msg.sender || msg.sender == owner(),
             "Only owner can unlist this NFT"
         );
         require(listDetail[_tokenId].isSold == false, "You already sold NFT");
@@ -130,7 +137,11 @@ contract ArbNFTMarketplace is IERC721Receiver, Ownable {
                 listDetail[_tokenId].timeStart <= block.timestamp,
             "Over time"
         );
-        nft.safeTransferFrom(address(this), msg.sender, _tokenId);
+        nft.safeTransferFrom(
+            address(this),
+            listDetail[_tokenId].seller,
+            _tokenId
+        );
         listDetail[_tokenId].currentlyListed = false;
         delete listDetail[_tokenId];
         removeToken(_tokenId);
@@ -156,7 +167,7 @@ contract ArbNFTMarketplace is IERC721Receiver, Ownable {
         emit UpdateListingNFTPrice(_tokenId, _price);
     }
 
-    function buyNft(uint256 _tokenId) public payable {
+    function buyNft(uint256 _tokenId) public payable nonReentrant {
         require(
             nft.ownerOf(_tokenId) == address(this),
             "This NFT doesn't exist on marketplace"
@@ -288,6 +299,19 @@ contract ArbNFTMarketplace is IERC721Receiver, Ownable {
     ) public view returns (ListDetail memory) {
         return listDetail[_tokenId];
     }
+
+    function setPaused(bool _paused) external onlyOwner {
+        paused = _paused;
+    }
+
+    function getPaused() external view returns (bool) {
+        return paused;
+    }
+
+    // modifier onlyAuctioneer(uint256 _auctionId) {
+    //     require((msg.sender == auction[_auctionId].auctioneer||msg.sender==owner()), "Only auctioneer or owner can perform this action");
+    //     _;
+    // }
 
     function onERC721Received(
         address,
