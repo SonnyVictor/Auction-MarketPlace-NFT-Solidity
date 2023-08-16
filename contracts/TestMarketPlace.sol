@@ -12,6 +12,10 @@ contract ArbNFTMarketplace is IERC721Receiver, Ownable, ReentrancyGuard {
     using SafeMath for uint256;
     IERC721Enumerable private nft;
 
+    constructor(IERC721Enumerable _nft) {
+        nft = _nft;
+    }
+
     bool private paused;
 
     struct ListDetail {
@@ -24,8 +28,6 @@ contract ArbNFTMarketplace is IERC721Receiver, Ownable, ReentrancyGuard {
         bool currentlyListed;
     }
     mapping(uint256 => ListDetail) private listDetail;
-
-    ListDetail[] private arrListDetail;
 
     event ListNFT(
         address indexed _from,
@@ -90,18 +92,6 @@ contract ArbNFTMarketplace is IERC721Receiver, Ownable, ReentrancyGuard {
             true
         );
         nft.safeTransferFrom(msg.sender, address(this), _tokenId);
-
-        arrListDetail.push(
-            ListDetail({
-                seller: payable(msg.sender),
-                tokenId: _tokenId,
-                price: _price,
-                timeStart: block.timestamp,
-                timeEnd: block.timestamp + _time,
-                isSold: false,
-                currentlyListed: true
-            })
-        );
         emit ListNFT(
             msg.sender,
             _tokenId,
@@ -109,6 +99,118 @@ contract ArbNFTMarketplace is IERC721Receiver, Ownable, ReentrancyGuard {
             block.timestamp,
             block.timestamp + _time
         );
+    }
+
+    // function getAllNFTTTTTT() public  view returns(ListDetail[] memory){
+    //     uint256 length = countCurrentNFTListed();
+    //     ListDetail[] memory validDetails = new ListDetail[](length);
+    //     uint currentIndex = 0;
+    //     uint currentId;
+    //     for(uint i=0;i<length;i++){
+    //         currentId = i+1;
+    //         ListDetail storage currentItem = listDetail[currentId];
+    //         validDetails[currentIndex] = currentItem;
+    //         currentIndex += 1;
+    //     }
+    //     return validDetails;
+    // }
+    // function getAllNFT() public view returns (ListDetail[] memory) {
+    //     uint256 length = countCurrentNFTListed();
+    //     ListDetail[] memory validDetails = new ListDetail[](length);
+    //     uint256 validCount = 0;
+
+    //     for (uint256 i = 0; i < length; i++) {
+    //         ListDetail memory currentItem = listDetail[i + 1];
+    //         if (currentItem.tokenId != 0) {
+    //             validDetails[validCount] = currentItem;
+    //             validCount++;
+    //         }
+    //     }
+
+    //     ListDetail[] memory details = new ListDetail[](validCount);
+    //     for (uint256 i = 0; i < validCount; i++) {
+    //         details[i] = validDetails[i];
+    //     }
+
+    //     return details;
+
+    // }
+
+    // function getAllValues() public view returns (ListDetail[] memory) {
+    //     uint256 length = countCurrentNFTListed();
+    //     ListDetail[] memory allValues = new ListDetail[](length);
+
+    //     for (uint256 i = 0; i < length; i++) {
+    //         allValues[i] = listDetail[i];
+    //     }
+
+    //     return allValues;
+    // }
+
+    // function getAllNFTOnSale() public view returns(ListDetail[] memory){
+    //     uint256 length = countCurrentNFTListed();
+    //     uint256 listedCount = 0;
+
+    //     for (uint256 i = 1; i <= length; i++) {
+    //         if (listDetail[i].currentlyListed == true) {
+    //             listedCount++;
+    //         }
+    //     }
+    //     ListDetail[] memory listedNFTs = new ListDetail[](listedCount);
+    //     uint256 currentIndex = 0;
+
+    //     for (uint256 i = 1; i <= length; i++) {
+    //         if (listDetail[i].currentlyListed == true) {
+    //             listedNFTs[currentIndex] = listDetail[i];
+    //             currentIndex++;
+    //         }
+    //     }
+
+    //     return listedNFTs;
+    // }
+
+    function getAllNFTOnSale() public view returns (ListDetail[] memory) {
+        uint256 length = countCurrentNFTListed();
+        uint256 listedCount = 0;
+
+        for (uint256 i = 0; i <= length; i++) {
+            if (listDetail[i].currentlyListed == true) {
+                listedCount++;
+            }
+        }
+        ListDetail[] memory listedNFTs = new ListDetail[](listedCount);
+        uint256 currentIndex = 0;
+
+        for (uint256 i = 1; i <= length; i++) {
+            if (listDetail[i].currentlyListed == true) {
+                listedNFTs[currentIndex] = listDetail[i];
+                currentIndex++;
+            }
+        }
+
+        return listedNFTs;
+    }
+
+    function getTestAllValue() public view returns (ListDetail[] memory) {
+        uint256 length = countCurrentNFTListed();
+        if (length == 0) {
+            return new ListDetail[](0);
+        } else {
+            ListDetail[] memory listedNFTs = new ListDetail[](length);
+            uint256 countList = 0;
+            for (uint256 i = 1; i < length; i++) {
+                if (listDetail[i].currentlyListed == true) {
+                    countList++;
+                }
+            }
+            for (uint256 i = 1; i <= length; i++) {
+                if (listDetail[i].currentlyListed == true) {
+                    listedNFTs[countList] = listDetail[i];
+                }
+            }
+
+            return listedNFTs;
+        }
     }
 
     function unlistNft(uint256 _tokenId) external {
@@ -130,14 +232,13 @@ contract ArbNFTMarketplace is IERC721Receiver, Ownable, ReentrancyGuard {
                 listDetail[_tokenId].timeStart <= block.timestamp,
             "Over time"
         );
+        listDetail[_tokenId].currentlyListed = false;
         nft.safeTransferFrom(
             address(this),
             listDetail[_tokenId].seller,
             _tokenId
         );
-        listDetail[_tokenId].currentlyListed = false;
-        delete listDetail[_tokenId];
-        removeToken(_tokenId);
+        // delete listDetail[_tokenId];
         emit UnlistNFT(msg.sender, _tokenId);
     }
 
@@ -155,7 +256,6 @@ contract ArbNFTMarketplace is IERC721Receiver, Ownable, ReentrancyGuard {
                 listDetail[_tokenId].timeStart <= block.timestamp,
             "Over time"
         );
-
         listDetail[_tokenId].price = _price;
         emit UpdateListingNFTPrice(_tokenId, _price);
     }
@@ -198,7 +298,9 @@ contract ArbNFTMarketplace is IERC721Receiver, Ownable, ReentrancyGuard {
         listDetail[_tokenId].isSold = true;
         listDetail[_tokenId].currentlyListed = false;
 
-        removeToken(_tokenId);
+        // delete listDetail[_tokenId];
+
+        // removeToken(_tokenId);
         emit BuyNFT(msg.sender, _tokenId, msg.value);
     }
 
@@ -227,8 +329,14 @@ contract ArbNFTMarketplace is IERC721Receiver, Ownable, ReentrancyGuard {
             listDetail[_tokenId].currentlyListed == true,
             "NFT alredy listed"
         );
-        nft.safeTransferFrom(address(this), msg.sender, _tokenId);
+        nft.safeTransferFrom(
+            address(this),
+            listDetail[_tokenId].seller,
+            _tokenId
+        );
         delete listDetail[_tokenId];
+        // removeToken(_tokenId);
+
         emit userClaimNFTEndTime(msg.sender, _tokenId, block.timestamp);
     }
 
@@ -244,47 +352,6 @@ contract ArbNFTMarketplace is IERC721Receiver, Ownable, ReentrancyGuard {
 
     function getCountNFTSold() public view returns (uint256) {
         return _nftsSold;
-    }
-
-    function removeToken(uint256 tokenIdToRemove) private {
-        for (uint256 i = 0; i < arrListDetail.length; i++) {
-            if (arrListDetail[i].tokenId == tokenIdToRemove) {
-                if (i < arrListDetail.length - 1) {
-                    arrListDetail[i] = arrListDetail[arrListDetail.length - 1];
-                }
-                arrListDetail.pop();
-                delete listDetail[tokenIdToRemove];
-
-                break;
-            }
-        }
-    }
-
-    function getTokenIdsFromListDetailArray()
-        public
-        view
-        returns (uint256[] memory)
-    {
-        uint256[] memory tokenIds = new uint256[](arrListDetail.length);
-
-        for (uint256 i = 0; i < arrListDetail.length; i++) {
-            tokenIds[i] = arrListDetail[i].tokenId;
-        }
-
-        return tokenIds;
-    }
-
-    function getAllValuesFromStructs()
-        public
-        view
-        returns (ListDetail[] memory)
-    {
-        ListDetail[] memory allValues = new ListDetail[](arrListDetail.length);
-
-        for (uint256 i = 0; i < arrListDetail.length; i++) {
-            allValues[i] = arrListDetail[i];
-        }
-        return allValues;
     }
 
     function getTokenIdDetail(

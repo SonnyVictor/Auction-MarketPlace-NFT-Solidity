@@ -17,16 +17,16 @@ module.exports = {
   },
   networks: {
     arbitrumGoerli: {
-      url: process.env.TESTNET_RPC,
+      url: "https://arb-goerli.g.alchemy.com/v2/YuLIDxmtnQ6FAWrnbTlItQe_fzFBjkQC",
       accounts: [process.env.PRIVATE_KEY],
     },
-    mumbai: {
-      url: process.env.TESTNET_RPC_MUMBAI,
-      accounts: [process.env.PRIVATE_KEY],
-    },
+    // mumbai: {
+    //   url: process.env.TESTNET_RPC_MUMBAI,
+    //   accounts: [process.env.PRIVATE_KEY],
+    // },
   },
   etherscan: {
-    // apiKey: process.env.ARB_API_KEY,
-    apiKey: process.env.POLYGONSCAN_API_KEY,
+    apiKey: process.env.ARB_API_KEY,
+    // apiKey: process.env.POLYGONSCAN_API_KEY,
   },
 };

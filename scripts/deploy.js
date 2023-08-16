@@ -17,19 +17,22 @@ async function main() {
   // const nftTest = await hre.ethers.deployContract("TestNFT");
   // await nftTest.waitForDeployment();
   // console.log(await nftTest.getAddress());
+  const addressNFT = "0x21e02De785De12eE13591fa80DC4e06A350415B4";
+  const mkPlaceNFT = await hre.ethers.deployContract("ArbNFTMarketplace");
+  await mkPlaceNFT.waitForDeployment();
+  console.log(await mkPlaceNFT.getAddress());
+
   // const addressNFT = "0x398137aA0a094840972a1BCE91734B03125d436d";
-  // const mkPlaceNFT = await hre.ethers.deployContract("ArbNFTMarketplace", [
+  // const auctionNFT = await hre.ethers.deployContract("AuctionNFT", [
   //   addressNFT,
   // ]);
-  // await mkPlaceNFT.waitForDeployment();
-  // console.log(await mkPlaceNFT.getAddress());
+  // await auctionNFT.waitForDeployment();
+  // console.log(await auctionNFT.getAddress());
 
-  const addressNFT = "0x398137aA0a094840972a1BCE91734B03125d436d";
-  const auctionNFT = await hre.ethers.deployContract("AuctionNFT", [
-    addressNFT,
-  ]);
-  await auctionNFT.waitForDeployment();
-  console.log(await auctionNFT.getAddress());
+  // await run(`verify:verify`, {
+  //   address: mkPlaceNFT.address,
+  //   constructorArguments: [addressNFT],
+  // });
 }
 
 // We recommend this pattern to be able to use async/await everywhere
