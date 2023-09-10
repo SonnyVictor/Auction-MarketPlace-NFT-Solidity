@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0
-pragma solidity >=0.7.0 <0.9.0;
+pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -7,15 +7,12 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "./DateTime.sol";
 
-contract LockCommunityRewards is Ownable {
+contract LockTokenBSCS is Ownable {
     IERC20 private token;
     DateTime private dateTimeContract;
-    uint256 public constant totalAmount = 1_800_000_000 * 10 ** 18;
+    uint256 public constant totalAmount = 200_000_000 * 10 ** 18;
 
-    uint256 public constant TGEAmount = 144_000_000_000 * 10 ** 18;
-    uint256 public constant NextAmount = 138_000_000_000 * 10 ** 18;
-
-    mapping(address => uint256) private balanceOfToken;
+    uint256 public constant UnLockEachMonth = 10000 * 10 ** 18;
     struct privateSaler {
         uint256 withdrawTimeUser;
         uint256 amount;
@@ -24,11 +21,6 @@ contract LockCommunityRewards is Ownable {
 
     mapping(uint256 => privateSaler) private withdrawTime;
 
-    event DepositToken(
-        address addressDeposit,
-        uint256 amount,
-        uint256 timeDeposit
-    );
     event WithdrawToken(address addressWithdraw, uint256 amount, uint256 time);
     event WithdrawTokenEachMonth(
         uint256 id,
@@ -40,17 +32,21 @@ contract LockCommunityRewards is Ownable {
     constructor(IERC20 _token, address _addressDateTime) {
         token = IERC20(_token);
         dateTimeContract = DateTime(_addressDateTime);
-        initWithdrawTime();
     }
 
-    function initWithdrawTime() internal {
-        uint16[] memory yearsss = new uint16[](13);
-        uint8[] memory months = new uint8[](13);
+    function initWithdrawTime(
+        uint16 _years,
+        uint8 _month,
+        uint8 _day,
+        uint8 _numberMonths
+    ) external onlyOwner {
+        uint16[] memory yearsss = new uint16[](_numberMonths);
+        uint8[] memory months = new uint8[](_numberMonths);
 
-        yearsss[0] = 2023;
-        months[0] = 10;
+        yearsss[0] = _years;
+        months[0] = _month;
 
-        for (uint8 i = 1; i < 13; i++) {
+        for (uint8 i = 1; i < _numberMonths; i++) {
             yearsss[i] = yearsss[i - 1];
             months[i] = months[i - 1] + 1;
             if (months[i] > 12) {
@@ -59,20 +55,12 @@ contract LockCommunityRewards is Ownable {
             }
         }
 
-        for (uint8 i = 0; i < 13; i++) {
-            if (i == 0) {
-                withdrawTime[i] = privateSaler(
-                    useDateTime(yearsss[i], months[i], 10),
-                    TGEAmount,
-                    false
-                );
-            } else {
-                withdrawTime[i] = privateSaler(
-                    useDateTime(yearsss[i], months[i], 10),
-                    NextAmount,
-                    false
-                );
-            }
+        for (uint8 i = 0; i < _numberMonths; i++) {
+            withdrawTime[i] = privateSaler(
+                useDateTime(yearsss[i], months[i], _day),
+                UnLockEachMonth,
+                false
+            );
         }
     }
 
@@ -82,22 +70,6 @@ contract LockCommunityRewards is Ownable {
 
     function getAddressOwner() public view returns (address) {
         return owner();
-    }
-
-    function desposit(uint256 _amountToken) external {
-        require(
-            token.balanceOf(msg.sender) >= 0,
-            "Insufficient account balance"
-        );
-        balanceOfToken[msg.sender] += _amountToken;
-        SafeERC20.safeTransferFrom(
-            token,
-            msg.sender,
-            address(this),
-            _amountToken
-        );
-
-        emit DepositToken(msg.sender, _amountToken, block.timestamp);
     }
 
     function withdrawTokenEachMonth(uint256 _index) external onlyOwner {
@@ -116,17 +88,6 @@ contract LockCommunityRewards is Ownable {
             infor.amount,
             block.timestamp
         );
-    }
-
-    function withDrawAllToken() external onlyOwner {
-        uint256 balance = token.balanceOf(address(this));
-        SafeERC20.safeTransfer(token, msg.sender, balance);
-    }
-
-    function getTokenBalanceOf(
-        address _address
-    ) external view returns (uint256) {
-        return balanceOfToken[_address];
     }
 
     function useDateTime(

@@ -150,7 +150,7 @@ const test = async () => {
   );
   console.log("TXNS", txns);
   const items = await Promise.all(
-    txns.map(async (i: any) => {
+    txns.map(async (i) => {
       const [transactionHash, , logIndexStr] = i.uniqueId.split(":");
       const logIndex = parseInt(logIndexStr);
 

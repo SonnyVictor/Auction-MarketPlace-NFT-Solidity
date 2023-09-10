@@ -4,7 +4,7 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "build-contracts": "sol-merger \"./contracts/Distribution.sol\" ./build"
+    "build-contracts": "sol-merger \"./contracts/XRenderAILuffyMarketPlaceListSellBuy.sol\" ./build"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-chai-matchers": "^2.0.2",
@@ -26,6 +26,8 @@
     "@klaytn/contracts": "^1.0.6",
     "@openzeppelin/contracts": "^4.9.3",
     "alchemy-sdk": "^2.9.2",
-    "dotenv": "^16.3.1"
+    "dotenv": "^16.3.1",
+    "keccak256": "^1.0.6",
+    "merkletreejs": "^0.3.10"
   }
 }

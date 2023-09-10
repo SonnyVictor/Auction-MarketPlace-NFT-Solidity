@@ -119,12 +119,12 @@ contract Distribution is Ownable {
         require(lengthUser > 0, "Pls Add Number User");
         balanceOf[msg.sender] += msg.value;
         totalAmount += msg.value;
+        uint256 amount = msg.value;
         emit BalanceOf(msg.sender, msg.value, block.timestamp);
 
         for (uint256 i = 0; i < lengthUser; i++) {
             AddressUserReceiver storage receiver = addressReceiver[i];
-            uint256 amountToTransfer = (totalAmount * (receiver.percentage)) /
-                100;
+            uint256 amountToTransfer = (amount * (receiver.percentage)) / 100;
             receiver.isReceive = true;
             (bool sent, ) = payable(receiver.userAddressReceiver).call{
                 value: amountToTransfer
